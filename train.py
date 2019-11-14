@@ -20,7 +20,7 @@ y = tf.placeholder(dtype=tf.int32, shape=[BATCH_SIZE])
 
 # AlexNet and VGG
 # Net = AlexNet()
-Net = vggNet()
+Net = vggNet(is_training=True)
 logits = Net.inference(x)
 pred = tf.nn.softmax(logits)
 loss = Net.loss(logits=logits, labels=y)
@@ -37,13 +37,13 @@ top_k_op = tf.nn.in_top_k(pred, y, 1)
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=LEARNING_RATE)
 train_step = optimizer.minimize(loss)
 
-train_image, train_label = input_data.read_tfrecord(Config.tfrecord_file, BATCH_SIZE, shuffle=True, is_train=False)
+train_image, train_label = input_data.read_tfrecord(Config.tfrecord_file, BATCH_SIZE, shuffle=True, is_train=True)
 test_image, test_label = input_data.read_tfrecord(Config.test_tfrecord_file, BATCH_SIZE, shuffle=False, is_train=False)
 
 # sess = tf.Session()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
+gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.7)
 sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
 saver = tf.train.Saver(tf.global_variables())
