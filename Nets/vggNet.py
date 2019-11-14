@@ -3,6 +3,8 @@ import Config
 
 
 class vggNet:
+    def __init__(self,is_training):
+        self.is_training = is_training
 
     def print_activations(self, t):
         print(t.op.name, '', t.get_shape().as_list())
@@ -15,18 +17,18 @@ class vggNet:
             conv = tf.nn.conv2d(x, kernel, strides=[1,stride,stride,1],padding='SAME')
             biases = tf.Variable(tf.constant(0.0,shape=[output_dim], dtype=tf.float32),trainable=trainable, name='biases')
             conv = tf.nn.bias_add(conv, biases)
-            conv = tf.layers.batch_normalization(conv, training=True, name='bn')
+            conv = tf.layers.batch_normalization(conv, trainable=self.is_training,training=self.is_training, name='bn')
             conv1 = tf.nn.relu6(conv, name=scope)
 
             return conv1
 
-    def fc_block(self, x, input_dim, output_dim, name, is_lastfc=False):
+    def fc_block(self, x, input_dim, output_dim, name):
         with tf.name_scope(name) as scope, tf.variable_scope(name):
             weight = tf.Variable(tf.truncated_normal(dtype=tf.float32, shape=[input_dim, output_dim], stddev=0.01))
             bias = tf.Variable(tf.constant(0.001, tf.float32, [output_dim]))
             output = tf.matmul(x, weight)+bias
             # if is_lastfc==False:
-            output = tf.layers.batch_normalization(output, training=True, name='bn')
+            output = tf.layers.batch_normalization(output, trainable=self.is_training, training=self.is_training, name='bn')
             output = tf.nn.relu6(output, name=scope)
             return output
 
@@ -72,7 +74,7 @@ class vggNet:
         dim = pool6_reshape.get_shape()[1].value
         fc1 = self.fc_block(pool6_reshape, dim, 1024, 'fc1')
         fc2 = self.fc_block(fc1, 1024, 4096, 'fc2')
-        fc3 = self.fc_block(fc2, 4096, Config.num_classes, 'fc3', is_lastfc=True)
+        fc3 = self.fc_block(fc2, 4096, Config.num_classes, 'fc3')
 
         return fc3
 
